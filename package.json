@@ -1,7 +1,7 @@
 {
-  "name": "projeto_basico_nodejs",
+  "name": "basic_nodejs",
   "version": "1.0.0",
-  "description": "Noções Básicas em Node JS - Sem Interface Gráfica",
+  "description": "Node JS Basics - No Graphical Interface",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

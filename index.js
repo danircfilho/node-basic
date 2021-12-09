@@ -5,8 +5,6 @@ const chalk = require('chalk')
 // internal modules
 const fs = require('fs')
 
-console.log('Programa Iniciado!')
-
 //invoke function
 operation()
 
@@ -16,8 +14,7 @@ function operation() {
             type: 'list',
             name: 'action',
             message: 'What do you want to do?',
-            choices: ['Create an account', 'Check balance', 'Deposit', 'Withdraw money', 'Quit']
-            //Criar conta, Verificar saldo, Deposito, Sacar dinheiro, Sair
+            choices: ['Create an account', 'Check balance', 'Deposit', 'Withdraw money', 'Quit',]
         },
     ])
     .then((answer) => {
@@ -25,10 +22,10 @@ function operation() {
 
         if(action === 'Create an account') {
             createAccount()
-        } else if (action === 'Check balance') {
-            getAccountBalance()
         } else if (action === 'Deposit') {
             deposit()
+        } else if (action === 'Check balance') {
+            getAccountBalance()
         } else if (action === 'Withdraw money') {
             withdraw()
         } else if (action === 'Quit') {
@@ -56,24 +53,21 @@ function buildAccount() {
         },
     ])
     .then((answer) => {
+        console.info(answer['accountName'])
+        
         const accountName = answer ['accountName']
-
-        console.info(accountName)
 
         if(!fs.existsSync('accounts')) {
             fs.mkdirSync('accounts')
         }   
         
         if(fs.existsSync(`accounts/${accountName}.json`)) {
+            console.log(chalk.bgRed.black('This account already exists. choose another name!'))
 
-            console.log(
-                chalk.bgRed.black('This account already exists. choose another name!')
-            )
-
-            buildAccount()
+            buildAccount(accountName)
         }   
 
-        fs.writeFileSync(`accounts/${accountName}.json`, '{"balance": 0}', 
+        fs.writeFileSync(`accounts/${accountName}.json`, '{"balance":0}', 
             function (err) {
                 console.log(err)
             },
@@ -82,7 +76,7 @@ function buildAccount() {
         console.log(
             chalk.green('Congratulations, your account has been created!')
         )
-        
+
         operation()
     })
     .catch((err) => console.log(err))
@@ -133,12 +127,20 @@ function checkAccount(accountName) {
     return true
 }
 
+function getAccount (accountName) {
+    const accountJSON = fs.readFileSync(`accounts/${accountName}.json`, {
+        encoding: 'utf8',
+        flag: 'r', //read
+    })
+    return JSON.parse(accountJSON)
+}
+
 function addAmount (accountName, amount) {
     const accountData = getAccount(accountName) 
     
     if(!amount) {
         console.log(
-            chalk.bgRed.black('An error has occurred! Try again later.'
+            chalk.bgRed.black('An error has occurred! Try again later!'
         ))
         return deposit()
     }
@@ -154,14 +156,6 @@ function addAmount (accountName, amount) {
         console.log(
             chalk.green(`Has been deposited R$${amount} into your account!`),
         )
-}
-
-function getAccount (accountName) {
-    const accountJSON = fs.readFileSync(`accounts/${accountName}.json`, {
-        encoding: 'utf8',
-        flag: 'r', //read
-    })
-    return JSON.parse(accountJSON)
 }
 
 //account balance
@@ -209,7 +203,7 @@ function withdraw() {
 
         inquirer.prompt([
             {
-                name: 'accountName',
+                name: 'amount',
                 message: 'How much do you want to withdraw?',
             },
         ])
@@ -225,4 +219,29 @@ function withdraw() {
     .catch(err => console.log(err))
 }
 
-function removeAmount(accountName, amount)
+function removeAmount(accountName, amount) {
+    const accountData = getAccount(accountName)
+
+    if(!amount) {
+        console.log(chalk.bgRed.black('An error has occurred! Try again later!'))
+        return withdraw()
+    }
+
+    if(accountData.balance < amount) {
+        console.log(chalk.bgRed.black('Value unavailable!'))
+        return withdraw()
+    }
+
+    accountData.balance = parseFloat(accountData.balance) - parseFloat(amount)
+
+    fs.writeFileSync(`accounts/${accountName}.json`, JSON.stringify(accountData),
+    function (err) {
+        console.log(err)
+    },
+
+    )
+    console.log(chalk.green(`A withdrawal of R$${amount} from your account was made!`))
+
+    operation()
+}
+
